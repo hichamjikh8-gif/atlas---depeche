@@ -88,6 +88,25 @@ export async function runPartnerImport(
           continue;
         }
 
+        // Same title already on Atlas Dépêche (e.g. an article written here
+        // and then republished on Souss Actualités with a backlink): don't
+        // import it back as a duplicate.
+        const sameTitle = await db
+          .select({ id: articles.id })
+          .from(articles)
+          .where(
+            and(
+              eq(articles.locale, locale),
+              // Normalized: case, spacing and curly vs straight apostrophes (WordPress turns ' into ’).
+              sql`lower(regexp_replace(translate(trim(${articles.title}), '’‘', ''''''), '\\s+', ' ', 'g')) = lower(regexp_replace(translate(trim(${item.title}), '’‘', ''''''), '\\s+', ' ', 'g'))`,
+            ),
+          )
+          .limit(1);
+        if (sameTitle.length > 0) {
+          skipped++;
+          continue;
+        }
+
         const [event] = await db
           .insert(events)
           .values({
