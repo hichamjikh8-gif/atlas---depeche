@@ -122,13 +122,27 @@ export function parseArticleMeta(html: string): { description: string | null; im
 export async function fetchPartnerItems(site: PartnerSite): Promise<PartnerItem[]> {
   if (site.kind === "rss") {
     const items = await fetchRssItems(site.url);
-    return items.map((i) => ({
-      url: i.url,
-      title: i.title,
-      excerpt: cleanExcerpt(i.summary),
-      imageUrl: i.imageUrl ?? null,
-      publishedAt: i.publishedAt ?? null,
-    }));
+    const out: PartnerItem[] = [];
+    for (const i of items) {
+      let imageUrl = i.imageUrl ?? null;
+      // Souss Actualités' feed often carries no usable image — fall back to
+      // the article page's own og:image (the featured photo).
+      if (!imageUrl) {
+        try {
+          imageUrl = parseArticleMeta(await politeFetch(i.url)).image;
+        } catch {
+          // no photo then — the card shows a neutral placeholder
+        }
+      }
+      out.push({
+        url: i.url,
+        title: i.title,
+        excerpt: cleanExcerpt(i.summary),
+        imageUrl,
+        publishedAt: i.publishedAt ?? null,
+      });
+    }
+    return out;
   }
 
   const entries = parseNewsSitemap(await politeFetch(site.url));

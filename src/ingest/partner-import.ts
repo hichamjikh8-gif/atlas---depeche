@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
   PARTNER_SITES,
   buildPartnerBody,
@@ -67,6 +67,13 @@ export async function runPartnerImport(
           .limit(1);
         if (existing.length > 0) {
           skipped++;
+          // Backfill a photo found later (e.g. via og:image) onto an article imported without one.
+          if (item.imageUrl) {
+            await db
+              .update(articles)
+              .set({ imageUrl: item.imageUrl })
+              .where(and(eq(articles.eventId, existing[0]!.id), isNull(articles.imageUrl)));
+          }
           continue;
         }
 
