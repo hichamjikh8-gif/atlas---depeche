@@ -172,6 +172,11 @@ export async function correctArticle(articleId: string, formData: FormData) {
   const newBody = formData.get("body");
   const imageUrlRaw = formData.get("imageUrl");
   const videoUrlRaw = formData.get("videoUrl");
+  // "Modification mineure" (added 2026-11-05): an editorial touch-up (style,
+  // wording, layout) rather than a factual correction — still versioned and
+  // audit-logged, but the article keeps its status, so no public
+  // "corrigé le…" notice. Real factual corrections must leave it unchecked.
+  const minor = formData.get("minor") === "on";
   const newImageUrl = typeof imageUrlRaw === "string" && imageUrlRaw.trim() ? imageUrlRaw.trim() : null;
   const newVideoUrl = typeof videoUrlRaw === "string" && videoUrlRaw.trim() ? videoUrlRaw.trim() : null;
   if (typeof newTitle !== "string" || typeof newBody !== "string" || !newTitle.trim() || !newBody.trim()) {
@@ -203,7 +208,7 @@ export async function correctArticle(articleId: string, formData: FormData) {
       body: newBody,
       imageUrl: newImageUrl,
       videoUrl: newVideoUrl,
-      status: "corrected",
+      ...(minor ? {} : { status: "corrected" }),
       updatedAt: sql`now()`,
     })
     .where(eq(articles.id, articleId));
@@ -211,7 +216,7 @@ export async function correctArticle(articleId: string, formData: FormData) {
   await db.insert(auditLogs).values({
     entityType: "article",
     entityId: articleId,
-    action: "corrected",
+    action: minor ? "minor_edit" : "corrected",
     actorType: "human",
     details: { previousTitle: article.title, previousBody: article.body },
   });
@@ -226,7 +231,7 @@ export async function correctArticle(articleId: string, formData: FormData) {
     .from(events)
     .where(eq(events.id, article.eventId))
     .limit(1);
-  if (currentEvent) {
+  if (currentEvent && !minor) {
     await transitionEvent({
       db,
       eventId: article.eventId,

@@ -234,6 +234,10 @@ export default async function AdminArticlesPage() {
                                 placeholder="Vidéo URL"
                                 style={{ width: "100%", marginBottom: "0.5rem" }}
                               />
+                              <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9em" }}>
+                                <input type="checkbox" name="minor" /> Modification mineure (style, mise en page) —
+                                sans avis « article corrigé »
+                              </label>
                               <button type="submit">Save correction</button>
                             </form>
                           </details>
