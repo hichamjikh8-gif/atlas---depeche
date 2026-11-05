@@ -154,6 +154,75 @@ export async function getRadarItems(
 // 36 requires corrections to be visible, not to make the article vanish.
 const PUBLIC_STATUSES = ["published", "corrected"] as const;
 
+/** Which site an article came from, judged by its credited read-more link (see src/ingest/partners.ts). */
+export function articleOriginName(body: string): string {
+  if (body.includes("souss-actualites.com")) return "Souss Actualités";
+  if (body.includes("rexfoot.com")) return "RexFoot";
+  return "Atlas Dépêche";
+}
+
+/**
+ * Homepage feed since 2026-11-05: Atlas Dépêche's own published articles
+ * (Souss Actualités + RexFoot imports and hand-written ones), newest first —
+ * replaces the external radar feed on the homepage at Hicham's request
+ * ("only Souss Actualités and RexFoot"). Same item shape as the radar cards
+ * so the homepage layout is unchanged; `url` is the internal article page.
+ */
+export async function getHomeArticles(
+  locale: Locale,
+  page: number,
+): Promise<{
+  items: Array<{
+    id: string;
+    title: string;
+    url: string;
+    imageUrl: string | null;
+    publishedAt: Date | null;
+    fetchedAt: Date;
+    sourceName: string;
+  }>;
+  page: number;
+  totalPages: number;
+}> {
+  const [countRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(articles)
+    .where(and(eq(articles.locale, locale), inArray(articles.status, PUBLIC_STATUSES)));
+  const total = countRow?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / RADAR_PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+
+  const rows = await db
+    .select({
+      id: articles.id,
+      title: articles.title,
+      slug: articles.slug,
+      body: articles.body,
+      imageUrl: articles.imageUrl,
+      publishedAt: articles.publishedAt,
+      createdAt: articles.createdAt,
+    })
+    .from(articles)
+    .where(and(eq(articles.locale, locale), inArray(articles.status, PUBLIC_STATUSES)))
+    .orderBy(desc(sql`coalesce(${articles.publishedAt}, ${articles.createdAt})`))
+    .limit(RADAR_PAGE_SIZE)
+    .offset((safePage - 1) * RADAR_PAGE_SIZE);
+
+  return {
+    items: rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      url: `/${locale}/${r.slug}`,
+      imageUrl: r.imageUrl,
+      publishedAt: r.publishedAt,
+      fetchedAt: r.publishedAt ?? r.createdAt,
+      sourceName: articleOriginName(r.body),
+    })),
+    page: safePage,
+    totalPages,
+  };
+}
+
 export async function getPublishedArticles(locale: Locale) {
   return db
     .select({
