@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, getDictionary, type Locale } from "@/i18n/locales";
-import { getActiveSourceNames, getRadarItems } from "@/lib/public-site";
+import { getHomeArticles } from "@/lib/public-site";
 
 export const dynamic = "force-dynamic";
 
@@ -23,15 +23,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const dict = getDictionary(locale);
-  const sourceNames = await getActiveSourceNames(locale as Locale);
-  const sourcesList = sourceNames.slice(0, 8).join(locale === "ar" ? "، " : ", ");
-
   const title = page > 1 ? `${dict.homeLabel} — ${locale === "ar" ? `صفحة ${page}` : `page ${page}`}` : dict.homeLabel;
 
   const description =
     locale === "ar"
-      ? `آخر أخبار المغرب مجمّعة في مكان واحد من عدة مصادر إخبارية مغربية: ${sourcesList}. تحديث مستمر، مع رابط مباشر لكل مقال في مصدره الأصلي.`
-      : `L'actualité du Maroc réunie en un seul endroit, agrégée en direct depuis plusieurs médias marocains : ${sourcesList}. Chaque article renvoie vers sa source originale.`;
+      ? "آخر أخبار سوس ماسة والمغرب من سوس أكتواليتي، وآخر أخبار كرة القدم من ريكس فوت، مع رابط مباشر لكل مقال في مصدره الأصلي."
+      : "L'actualité du Souss-Massa et du Maroc par Souss Actualités, et le football par RexFoot — chaque article renvoie vers sa source originale.";
 
   const canonicalPath = page > 1 ? `/${locale}?page=${page}` : `/${locale}`;
 
@@ -53,7 +50,7 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const requestedPage = Math.max(1, Number(pageParam) || 1);
 
-  const { items, page, totalPages } = await getRadarItems(locale as Locale, requestedPage);
+  const { items, page, totalPages } = await getHomeArticles(locale as Locale, requestedPage);
 
   // Tells Google this page is a curated list of links to real, external
   // news items — not that Atlas Dépêche wrote them (no "author"/
@@ -76,7 +73,7 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
             itemListElement: items.map((item, index) => ({
               "@type": "ListItem",
               position: index + 1,
-              url: item.url,
+              url: `${siteUrl}${item.url}`,
               name: item.title,
             })),
           },
@@ -193,10 +190,8 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
                     background: "var(--color-bg-elevated)",
                   }}
                 >
-                  <a
+                  <Link
                     href={item.url}
-                    target="_blank"
-                    rel="noopener nofollow"
                     aria-label={item.title}
                     style={{ display: "block" }}
                   >
@@ -227,7 +222,7 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
                         }}
                       />
                     )}
-                  </a>
+                  </Link>
                   <div
                     style={{
                       padding: "var(--space-4)",
@@ -236,10 +231,8 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
                       flex: 1,
                     }}
                   >
-                    <a
+                    <Link
                       href={item.url}
-                      target="_blank"
-                      rel="noopener nofollow"
                       style={{
                         fontFamily: "var(--font-serif)",
                         fontSize: "var(--text-lg)",
@@ -251,7 +244,7 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
                       }}
                     >
                       {item.title}
-                    </a>
+                    </Link>
                     <div
                       style={{
                         marginBlockStart: "auto",
