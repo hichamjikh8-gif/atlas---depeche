@@ -5,8 +5,9 @@ name: X personalidades (Twitter)
 # src/workers/radar-x.ts and src/ingest/x-timeline.ts for the full
 # reasoning and the real per-account cost math.
 on:
-  schedule:
-    - cron: "0 8 * * *"
+  # Schedule turned off 2026-11-05 at Hicham's request: Atlas Dépêche now
+  # only imports Souss Actualités + RexFoot (src/instrumentation.ts). Still runnable
+  # by hand from the Actions tab.
   workflow_dispatch:
 
 jobs:

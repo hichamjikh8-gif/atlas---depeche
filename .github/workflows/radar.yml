@@ -1,8 +1,9 @@
 name: Radar (buscar noticias)
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"
+  # Schedule turned off 2026-11-05 at Hicham's request: Atlas Dépêche now
+  # only imports Souss Actualités + RexFoot (src/instrumentation.ts). Still runnable
+  # by hand from the Actions tab.
   workflow_dispatch:
 
 jobs:
