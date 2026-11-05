@@ -3,7 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { articleSources, articles, events } from "@/db/schema";
 import { renderArticleBody } from "@/lib/article-format";
-import { approveEventArticles, correctArticle, createManualArticle } from "./actions";
+import { approveEventArticles, correctArticle, createManualArticle, unpublishArticle } from "./actions";
 import { RichEditor } from "./RichEditor";
 import { MANUAL_CATEGORIES } from "./manual-categories";
 
@@ -235,7 +235,7 @@ export default async function AdminArticlesPage() {
                                 style={{ width: "100%", marginBottom: "0.5rem" }}
                               />
                               <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9em" }}>
-                                <input type="checkbox" name="minor" /> Modification mineure (style, mise en page) —
+                                <input type="checkbox" name="minor" defaultChecked /> Modification mineure (style, mise en page) —
                                 sans avis « article corrigé »
                               </label>
                               {article.status === "corrected" && (
@@ -247,6 +247,13 @@ export default async function AdminArticlesPage() {
                               <button type="submit">Save correction</button>
                             </form>
                           </details>
+                        )}
+                        {(article.status === "published" || article.status === "corrected") && (
+                          <form action={unpublishArticle.bind(null, article.articleId)} style={{ marginTop: "0.5rem" }}>
+                            <button type="submit" style={{ color: "#b00" }}>
+                              Retirer du site (dépublier)
+                            </button>
+                          </form>
                         )}
                       </>
                     )}

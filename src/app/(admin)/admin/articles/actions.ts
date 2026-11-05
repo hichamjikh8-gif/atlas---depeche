@@ -166,6 +166,26 @@ export async function createManualArticle(formData: FormData) {
  * the previous text, so nothing is corrected silently — see
  * docs — legal/corrections page describes this same workflow publicly.
  */
+/**
+ * Takes an article off the public site (status "archived") without deleting
+ * it — added 2026-11-05 (e.g. to remove a duplicate). Logged in audit_logs.
+ */
+export async function unpublishArticle(articleId: string) {
+  await requireAdminSession();
+  const [article] = await db.select({ status: articles.status }).from(articles).where(eq(articles.id, articleId)).limit(1);
+  if (!article || (article.status !== "published" && article.status !== "corrected")) return;
+  await db.update(articles).set({ status: "archived", updatedAt: sql`now()` }).where(eq(articles.id, articleId));
+  await db.insert(auditLogs).values({
+    entityType: "article",
+    entityId: articleId,
+    action: "unpublished",
+    actorType: "human",
+    details: { previousStatus: article.status },
+  });
+  revalidatePath("/admin/articles");
+  revalidatePath("/[locale]", "layout");
+}
+
 export async function correctArticle(articleId: string, formData: FormData) {
   await requireAdminSession();
   const newTitle = formData.get("title");
