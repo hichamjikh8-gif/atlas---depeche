@@ -14,6 +14,7 @@ import { ShareLinks } from "@/components/ShareLinks";
 import { BreakingTicker } from "@/components/BreakingTicker";
 import { AdFlash } from "@/components/AdFlash";
 import "@/app/globals.css";
+import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Second root layout (route group) alongside (admin) — each defines its
@@ -34,6 +35,7 @@ export async function generateMetadata({
   if (!isLocale(locale)) return {};
   const dict = getDictionary(locale);
   return {
+    metadataBase: new URL(getSiteUrl()),
     title: { default: dict.siteName, template: `%s — ${dict.siteName}` },
     description: dict.tagline,
     alternates: {

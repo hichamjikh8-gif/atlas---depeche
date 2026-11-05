@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, getDictionary, type Locale } from "@/i18n/locales";
 import { getHomeArticles } from "@/lib/public-site";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,7 @@ export default async function LocaleHomePage({ params, searchParams }: Props) {
   // dangerouslySetInnerHTML since titles come from external RSS/HTML
   // feeds — untrusted input — and a literal "</script>" in one could
   // otherwise break out of the tag.
-  const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   const jsonLd =
     items.length > 0
       ? {
