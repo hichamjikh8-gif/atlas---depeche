@@ -51,6 +51,11 @@ export default async function ArticlePage({
 
   const isCorrected = article.status === "corrected";
   const embedVideoUrl = article.videoUrl ? toEmbeddableVideoUrl(article.videoUrl) : null;
+  // A direct video file (e.g. the .mp4 Souss Actualités attaches to a post) plays inline.
+  const directVideoUrl =
+    article.videoUrl && !embedVideoUrl && /^https:\/\/.+\.(mp4|webm|m4v|mov)(\?|#|$)/i.test(article.videoUrl)
+      ? article.videoUrl
+      : null;
   const publishedDate = article.publishedAt?.toISOString().slice(0, 10);
   const updatedDate = article.updatedAt.toISOString().slice(0, 10);
 
@@ -127,7 +132,17 @@ export default async function ArticlePage({
           />
         </div>
       )}
-      {article.videoUrl && !embedVideoUrl && (
+      {directVideoUrl && (
+        <video
+          src={directVideoUrl}
+          controls
+          playsInline
+          preload="metadata"
+          poster={article.imageUrl ?? undefined}
+          style={{ width: "100%", borderRadius: "4px", marginBlockEnd: "var(--space-6)", background: "#000" }}
+        />
+      )}
+      {article.videoUrl && !embedVideoUrl && !directVideoUrl && (
         <p style={{ marginBlockEnd: "var(--space-6)" }}>
           <a href={article.videoUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-accent)" }}>
             {locale === "ar" ? "▶ مشاهدة الفيديو" : "▶ Voir la vidéo"}
