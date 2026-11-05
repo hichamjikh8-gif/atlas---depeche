@@ -1,5 +1,5 @@
 import { getDictionary, type Locale } from "@/i18n/locales";
-import { getRadarItems } from "@/lib/public-site";
+import { getHomeArticles } from "@/lib/public-site";
 
 const TICKER_ITEM_COUNT = 12;
 // Slowed down twice now (was 45s, then 90s) — still reported as too fast.
@@ -12,13 +12,13 @@ const TICKER_DURATION_SECONDS = 160;
  * `ticker-scroll` keyframe in globals.css for how one keyframe drives both
  * directions via `animation-direction`.
  *
- * Headlines link straight to the ORIGINAL article (rel="noopener nofollow"),
- * same rule as the homepage cards — this is still the aggregator, not a
- * second copy of the text.
+ * Since 2026-11-05 headlines are Atlas Dépêche's own article pages (Souss
+ * Actualités + RexFoot imports and hand-written articles), same feed as the
+ * homepage cards — see getHomeArticles in src/lib/public-site.ts.
  */
 export async function BreakingTicker({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
-  const { items } = await getRadarItems(locale, 1);
+  const { items } = await getHomeArticles(locale, 1);
   const headlines = items.slice(0, TICKER_ITEM_COUNT);
 
   if (headlines.length === 0) return null;
@@ -27,8 +27,6 @@ export async function BreakingTicker({ locale }: { locale: Locale }) {
     <a
       key={`${keyPrefix}-${item.id}`}
       href={item.url}
-      target="_blank"
-      rel="noopener nofollow"
       dir={locale === "ar" ? "rtl" : "ltr"}
       style={{
         display: "inline-flex",
