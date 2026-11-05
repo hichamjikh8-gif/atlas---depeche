@@ -128,3 +128,24 @@ export async function runPartnerImport(
   console.log(`[partners] done: ${imported} imported, ${skipped} already there, ${failed} error(s)${DRY_RUN ? " (dry run)" : ""}`);
   return { imported, skipped, failed };
 }
+
+/**
+ * "Only Souss Actualités + RexFoot" (Hicham, 2026-11-05): every external
+ * radar source in the `sources` table is set to `paused`, so the radar
+ * worker (src/workers/radar.ts, which only polls `active` sources) imports
+ * nothing more — even if a radar cron is still scheduled elsewhere.
+ * Nothing is deleted; to bring a source back, set its status to "active"
+ * and set PARTNERS_ONLY=false so this doesn't pause it again.
+ */
+export async function pauseRadarSources(): Promise<number> {
+  if (process.env.PARTNERS_ONLY === "false") return 0;
+  const { db } = await import("@/db/client");
+  const { sources } = await import("@/db/schema");
+  const paused = await db
+    .update(sources)
+    .set({ status: "paused" })
+    .where(eq(sources.status, "active"))
+    .returning({ id: sources.id });
+  if (paused.length > 0) console.log(`[partners] paused ${paused.length} external radar source(s)`);
+  return paused.length;
+}
