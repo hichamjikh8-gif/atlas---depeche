@@ -32,7 +32,9 @@
     "write:once": "tsx src/workers/write.ts",
     "distribute:once": "tsx src/workers/distribute.ts",
     "instagram:once": "tsx src/workers/instagram-publish.ts",
-    "cleanup:once": "tsx src/workers/cleanup.ts"
+    "cleanup:once": "tsx src/workers/cleanup.ts",
+    "partners:dry-run": "tsx src/workers/partners.ts --dry-run",
+    "partners:once": "tsx src/workers/partners.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",
