@@ -154,10 +154,17 @@ export async function getRadarItems(
 // 36 requires corrections to be visible, not to make the article vanish.
 const PUBLIC_STATUSES = ["published", "corrected"] as const;
 
-/** Which site an article came from, judged by its credited read-more link (see src/ingest/partners.ts). */
+/**
+ * Which site an article came from, judged by the credited read-more link
+ * that only partner imports carry (see buildPartnerBody in
+ * src/ingest/partners.ts) — a hand-written article that merely mentions
+ * souss-actualites.com stays "Atlas Dépêche".
+ */
 export function articleOriginName(body: string): string {
-  if (body.includes("souss-actualites.com")) return "Souss Actualités";
-  if (body.includes("rexfoot.com")) return "RexFoot";
+  if (/\]\(https:\/\/(www\.)?souss-actualites\.com\//.test(body) && /(Lire l'article complet sur|اقرأ المقال كاملاً على)/.test(body))
+    return "Souss Actualités";
+  if (/\]\(https:\/\/(www\.)?rexfoot\.com\//.test(body) && /(Lire l'article complet sur|اقرأ المقال كاملاً على)/.test(body))
+    return "RexFoot";
   return "Atlas Dépêche";
 }
 
