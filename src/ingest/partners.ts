@@ -49,11 +49,19 @@ export const PARTNER_SITES: readonly PartnerSite[] = [
   },
 ];
 
+/** True unless the URL is clearly a video/audio file (feeds sometimes put an .mp4 in <enclosure>). */
+export function isLikelyImageUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  return !/\.(mp4|m4v|mov|webm|avi|mkv|mp3|m4a|wav|ogg)(\?|#|$)/i.test(url);
+}
+
 export interface PartnerItem {
   url: string;
   title: string;
   excerpt: string;
   imageUrl: string | null;
+  /** Direct video file attached to the original post (e.g. an .mp4 enclosure), shown on the article page. */
+  videoUrl?: string | null;
   publishedAt: Date | null;
 }
 
@@ -124,12 +132,13 @@ export async function fetchPartnerItems(site: PartnerSite): Promise<PartnerItem[
     const items = await fetchRssItems(site.url);
     const out: PartnerItem[] = [];
     for (const i of items) {
-      let imageUrl = i.imageUrl ?? null;
-      // Souss Actualités' feed often carries no usable image — fall back to
-      // the article page's own og:image (the featured photo).
+      let imageUrl = isLikelyImageUrl(i.imageUrl) ? i.imageUrl : null;
+      // Souss Actualités' feed often carries no usable image (or a video in
+      // <enclosure>) — fall back to the article page's own og:image.
       if (!imageUrl) {
         try {
-          imageUrl = parseArticleMeta(await politeFetch(i.url)).image;
+          const og = parseArticleMeta(await politeFetch(i.url)).image;
+          imageUrl = isLikelyImageUrl(og) ? og : null;
         } catch {
           // no photo then — the card shows a neutral placeholder
         }
@@ -139,6 +148,7 @@ export async function fetchPartnerItems(site: PartnerSite): Promise<PartnerItem[
         title: i.title,
         excerpt: cleanExcerpt(i.summary),
         imageUrl,
+        videoUrl: i.imageUrl && !isLikelyImageUrl(i.imageUrl) ? i.imageUrl : null,
         publishedAt: i.publishedAt ?? null,
       });
     }
@@ -158,7 +168,7 @@ export async function fetchPartnerItems(site: PartnerSite): Promise<PartnerItem[
       url: entry.url,
       title: entry.title,
       excerpt: cleanExcerpt(meta.description),
-      imageUrl: meta.image,
+      imageUrl: isLikelyImageUrl(meta.image) ? meta.image : null,
       publishedAt: entry.publishedAt,
     });
   }

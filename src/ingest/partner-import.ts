@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import {
   PARTNER_SITES,
   buildPartnerBody,
@@ -72,7 +72,18 @@ export async function runPartnerImport(
             await db
               .update(articles)
               .set({ imageUrl: item.imageUrl })
-              .where(and(eq(articles.eventId, existing[0]!.id), isNull(articles.imageUrl)));
+              .where(
+                and(
+                  eq(articles.eventId, existing[0]!.id),
+                  or(isNull(articles.imageUrl), sql`${articles.imageUrl} ~* '\\.(mp4|m4v|mov|webm|mp3)$'`),
+                ),
+              );
+          }
+          if (item.videoUrl) {
+            await db
+              .update(articles)
+              .set({ videoUrl: item.videoUrl })
+              .where(and(eq(articles.eventId, existing[0]!.id), isNull(articles.videoUrl)));
           }
           continue;
         }
@@ -100,6 +111,7 @@ export async function runPartnerImport(
             slug,
             body,
             imageUrl: item.imageUrl,
+            videoUrl: item.videoUrl ?? null,
             publicationMode: "human_only",
             publishedAt: item.publishedAt ?? new Date(),
           })

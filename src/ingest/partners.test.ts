@@ -4,6 +4,7 @@ import {
   buildPartnerBody,
   cleanExcerpt,
   detectLocale,
+  isLikelyImageUrl,
   parseArticleMeta,
   parseNewsSitemap,
   partnerFingerprint,
@@ -63,5 +64,12 @@ describe("partners", () => {
     const html = `<html><head><meta property="og:description" content=" Desc "><meta property="og:image" content="https://x/i.jpg"></head></html>`;
     expect(parseArticleMeta(html)).toEqual({ description: "Desc", image: "https://x/i.jpg" });
     expect(parseArticleMeta("<html></html>")).toEqual({ description: null, image: null });
+  });
+
+  it("rejects video enclosures as photos", () => {
+    expect(isLikelyImageUrl("https://souss-actualites.com/wp-content/uploads/2026/11/x.mp4")).toBe(false);
+    expect(isLikelyImageUrl("https://souss-actualites.com/wp-content/uploads/2026/11/x.jpg")).toBe(true);
+    expect(isLikelyImageUrl("https://x.ma/image?id=1")).toBe(true);
+    expect(isLikelyImageUrl(null)).toBe(false);
   });
 });
