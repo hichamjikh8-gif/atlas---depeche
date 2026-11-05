@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { articleSources, articles, events } from "@/db/schema";
+import { renderArticleBody } from "@/lib/article-format";
 import { approveEventArticles, correctArticle, createManualArticle } from "./actions";
+import { RichEditor } from "./RichEditor";
+import { MANUAL_CATEGORIES } from "./manual-categories";
 
 export const metadata: Metadata = {
   title: "CMS Articles",
@@ -94,16 +97,18 @@ export default async function AdminArticlesPage() {
       <p>ASSISTED mode: approving publishes immediately to the public site.</p>
 
       <section style={{ border: "2px solid #2a6", borderRadius: 8, padding: "1rem", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>Write an article by hand (no AI, free)</h2>
+        <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>Écrire un article / كتابة مقال</h2>
         <p style={{ fontSize: "0.9em", color: "#555" }}>
-          Pick a real collected event, write the article yourself, and publish it directly —
-          no Anthropic call, no cost.
+          Écrivez votre article et publiez-le directement — sans IA, gratuit. Choisissez
+          « Article libre » pour écrire sur n&apos;importe quel sujet, ou rattachez-le à un
+          événement détecté par le radar.
         </p>
         <form action={createManualArticle}>
           <div style={{ marginBottom: "0.5rem" }}>
             <label>
-              Event:{" "}
-              <select name="eventId" required style={{ width: "100%", padding: "0.4rem" }}>
+              Événement / الحدث :{" "}
+              <select name="eventId" defaultValue="" style={{ width: "100%", padding: "0.4rem" }}>
+                <option value="">✍ Article libre (sans événement) / مقال حر</option>
                 {recentEvents.map((e) => (
                   <option key={e.id} value={e.id}>
                     [{e.category}/{e.status}] {e.title}
@@ -119,6 +124,20 @@ export default async function AdminArticlesPage() {
                 <option value="fr">Français</option>
                 <option value="ar">العربية</option>
               </select>
+            </label>{" "}
+            <label style={{ marginInlineStart: "1rem" }}>
+              Rubrique (article libre) :{" "}
+              <select name="category" defaultValue="news">
+                {MANUAL_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </label>{" "}
+            <label style={{ marginInlineStart: "1rem" }}>
+              Lieu :{" "}
+              <input name="location" placeholder="ex. Agadir" style={{ padding: "0.2rem 0.4rem" }} />
             </label>
           </div>
           <div style={{ marginBottom: "0.5rem" }}>
@@ -130,13 +149,7 @@ export default async function AdminArticlesPage() {
             />
           </div>
           <div style={{ marginBottom: "0.5rem" }}>
-            <textarea
-              name="body"
-              placeholder="Article body"
-              rows={8}
-              required
-              style={{ width: "100%", padding: "0.4rem" }}
-            />
+            <RichEditor name="body" required placeholder="Texte de l'article / نص المقال" />
           </div>
           <div style={{ marginBottom: "0.5rem" }}>
             <input
@@ -194,7 +207,7 @@ export default async function AdminArticlesPage() {
                             🎬 <a href={article.videoUrl} target="_blank" rel="noopener noreferrer">{article.videoUrl}</a>
                           </p>
                         )}
-                        <p style={{ whiteSpace: "pre-wrap" }}>{article.body}</p>
+                        <div>{renderArticleBody(article.body)}</div>
                         {(article.status === "published" || article.status === "corrected") && (
                           <details>
                             <summary>Correct this article</summary>
@@ -204,12 +217,9 @@ export default async function AdminArticlesPage() {
                                 defaultValue={article.title}
                                 style={{ width: "100%", marginBottom: "0.5rem" }}
                               />
-                              <textarea
-                                name="body"
-                                defaultValue={article.body}
-                                rows={6}
-                                style={{ width: "100%", marginBottom: "0.5rem" }}
-                              />
+                              <div style={{ marginBottom: "0.5rem" }}>
+                                <RichEditor name="body" defaultValue={article.body} rows={10} required />
+                              </div>
                               <input
                                 name="imageUrl"
                                 type="url"

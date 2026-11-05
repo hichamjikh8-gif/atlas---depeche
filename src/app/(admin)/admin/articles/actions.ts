@@ -7,6 +7,7 @@ import { articles, articleVersions, auditLogs, events } from "@/db/schema";
 import { transitionEvent } from "@/lib/event-state-machine";
 import { slugify } from "@/lib/slugify";
 import { requireAdminSession } from "@/lib/require-admin";
+import { MANUAL_CATEGORY_VALUES } from "./manual-categories";
 
 /**
  * ASSISTED mode's human-approval step (MASTER_PROMPT section 11) — and,
@@ -52,19 +53,45 @@ export async function approveEventArticles(eventId: string) {
  */
 export async function createManualArticle(formData: FormData) {
   await requireAdminSession();
-  const eventId = formData.get("eventId");
+  const eventIdRaw = formData.get("eventId");
   const locale = formData.get("locale");
   const title = formData.get("title");
   const body = formData.get("body");
   const imageUrlRaw = formData.get("imageUrl");
   const videoUrlRaw = formData.get("videoUrl");
+  const categoryRaw = formData.get("category");
+  const locationRaw = formData.get("location");
   const imageUrl = typeof imageUrlRaw === "string" && imageUrlRaw.trim() ? imageUrlRaw.trim() : null;
   const videoUrl = typeof videoUrlRaw === "string" && videoUrlRaw.trim() ? videoUrlRaw.trim() : null;
 
-  if (typeof eventId !== "string" || !eventId) return;
   if (locale !== "ar" && locale !== "fr") return;
   if (typeof title !== "string" || !title.trim()) return;
   if (typeof body !== "string" || !body.trim()) return;
+
+  // "Article libre" — no radar event picked. Every article belongs to an
+  // event (one event -> one article per locale), so create a dedicated
+  // event for it, authored by a human. Added 2026-11-05 at Hicham's
+  // request: write about any subject, WordPress-style, without first
+  // needing the radar to have collected it.
+  let eventId = typeof eventIdRaw === "string" ? eventIdRaw.trim() : "";
+  if (!eventId) {
+    const category =
+      typeof categoryRaw === "string" && MANUAL_CATEGORY_VALUES.has(categoryRaw) ? categoryRaw : "news";
+    const location = typeof locationRaw === "string" && locationRaw.trim() ? locationRaw.trim() : null;
+    const [created] = await db
+      .insert(events)
+      .values({ title: title.trim(), category, location, status: "candidate" })
+      .returning({ id: events.id });
+    if (!created) return;
+    eventId = created.id;
+    await db.insert(auditLogs).values({
+      entityType: "event",
+      entityId: eventId,
+      action: "manual_event_create",
+      actorType: "human",
+      details: { category, location, reason: "free article written in CMS (no radar event)" },
+    });
+  }
 
   const [event] = await db
     .select({ id: events.id, status: events.status })
