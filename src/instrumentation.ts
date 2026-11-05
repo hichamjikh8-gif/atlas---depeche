@@ -18,7 +18,8 @@ export async function register() {
     if (running) return;
     running = true;
     try {
-      const { runPartnerImport } = await import("./ingest/partner-import");
+      const { pauseRadarSources, runPartnerImport } = await import("./ingest/partner-import");
+      await pauseRadarSources();
       await runPartnerImport();
     } catch (err) {
       console.error("[partners] scheduled import failed:", err instanceof Error ? err.message : err);
