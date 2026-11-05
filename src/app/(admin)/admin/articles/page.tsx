@@ -238,6 +238,12 @@ export default async function AdminArticlesPage() {
                                 <input type="checkbox" name="minor" /> Modification mineure (style, mise en page) —
                                 sans avis « article corrigé »
                               </label>
+                              {article.status === "corrected" && (
+                                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9em" }}>
+                                  <input type="checkbox" name="removeNotice" /> Retirer l&apos;avis « Cet article a été
+                                  corrigé » (avec « Modification mineure »)
+                                </label>
+                              )}
                               <button type="submit">Save correction</button>
                             </form>
                           </details>

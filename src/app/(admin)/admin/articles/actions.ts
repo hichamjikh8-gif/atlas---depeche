@@ -177,6 +177,9 @@ export async function correctArticle(articleId: string, formData: FormData) {
   // audit-logged, but the article keeps its status, so no public
   // "corrigé le…" notice. Real factual corrections must leave it unchecked.
   const minor = formData.get("minor") === "on";
+  // Lets the editor take back a "corrigé le…" notice set by mistake (e.g. a
+  // style edit saved without ticking "Modification mineure"). Only with minor.
+  const removeNotice = minor && formData.get("removeNotice") === "on";
   const newImageUrl = typeof imageUrlRaw === "string" && imageUrlRaw.trim() ? imageUrlRaw.trim() : null;
   const newVideoUrl = typeof videoUrlRaw === "string" && videoUrlRaw.trim() ? videoUrlRaw.trim() : null;
   if (typeof newTitle !== "string" || typeof newBody !== "string" || !newTitle.trim() || !newBody.trim()) {
@@ -208,7 +211,7 @@ export async function correctArticle(articleId: string, formData: FormData) {
       body: newBody,
       imageUrl: newImageUrl,
       videoUrl: newVideoUrl,
-      ...(minor ? {} : { status: "corrected" }),
+      ...(minor ? (removeNotice ? { status: "published" } : {}) : { status: "corrected" }),
       updatedAt: sql`now()`,
     })
     .where(eq(articles.id, articleId));
@@ -216,7 +219,7 @@ export async function correctArticle(articleId: string, formData: FormData) {
   await db.insert(auditLogs).values({
     entityType: "article",
     entityId: articleId,
-    action: minor ? "minor_edit" : "corrected",
+    action: minor ? (removeNotice ? "minor_edit_notice_removed" : "minor_edit") : "corrected",
     actorType: "human",
     details: { previousTitle: article.title, previousBody: article.body },
   });
