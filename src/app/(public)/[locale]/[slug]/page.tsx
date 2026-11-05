@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/locales";
-import { linkifyText } from "@/lib/linkify";
+import { renderArticleBody, stripArticleFormatting } from "@/lib/article-format";
 import { getPublishedArticleBySlug } from "@/lib/public-site";
 import { toEmbeddableVideoUrl } from "@/lib/video-embed";
 
@@ -21,7 +21,7 @@ export async function generateMetadata({
   const article = await getPublishedArticleBySlug(locale, slug);
   if (!article) return {};
 
-  const description = article.body.slice(0, 160);
+  const description = stripArticleFormatting(article.body).slice(0, 160);
 
   return {
     title: article.title,
@@ -194,11 +194,7 @@ export default async function ArticlePage({
           color: "var(--color-text)",
         }}
       >
-        {article.body.split("\n\n").map((paragraph, i) => (
-          <p key={i} style={{ marginBlockEnd: "var(--space-4)" }}>
-            {linkifyText(paragraph)}
-          </p>
-        ))}
+        {renderArticleBody(article.body)}
       </div>
 
       <aside
