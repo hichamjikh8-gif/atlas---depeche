@@ -3,7 +3,8 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { articleSources, articles, events } from "@/db/schema";
 import { renderArticleBody } from "@/lib/article-format";
-import { approveEventArticles, correctArticle, createManualArticle, unpublishArticle } from "./actions";
+import { approveEventArticles, correctArticle, createManualArticle, deleteArticle, unpublishArticle } from "./actions";
+import { DeleteArticleButton } from "./DeleteArticleButton";
 import { RichEditor } from "./RichEditor";
 import { MANUAL_CATEGORIES } from "./manual-categories";
 
@@ -255,6 +256,7 @@ export default async function AdminArticlesPage() {
                             </button>
                           </form>
                         )}
+                        <DeleteArticleButton action={deleteArticle.bind(null, article.articleId)} title={article.title} />
                       </>
                     )}
                   </div>

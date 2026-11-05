@@ -186,6 +186,31 @@ export async function unpublishArticle(articleId: string) {
   revalidatePath("/[locale]", "layout");
 }
 
+/**
+ * Permanently deletes an article (cascade: versions, sources, social posts).
+ * The audit_logs row keeps a copy of the title/body. The parent event is
+ * kept, so a deleted partner import is not re-imported (same fingerprint).
+ */
+export async function deleteArticle(articleId: string) {
+  await requireAdminSession();
+  const [article] = await db
+    .select({ title: articles.title, body: articles.body, locale: articles.locale, status: articles.status })
+    .from(articles)
+    .where(eq(articles.id, articleId))
+    .limit(1);
+  if (!article) return;
+  await db.insert(auditLogs).values({
+    entityType: "article",
+    entityId: articleId,
+    action: "deleted",
+    actorType: "human",
+    details: { title: article.title, body: article.body, locale: article.locale, status: article.status },
+  });
+  await db.delete(articles).where(eq(articles.id, articleId));
+  revalidatePath("/admin/articles");
+  revalidatePath("/[locale]", "layout");
+}
+
 export async function correctArticle(articleId: string, formData: FormData) {
   await requireAdminSession();
   const newTitle = formData.get("title");
