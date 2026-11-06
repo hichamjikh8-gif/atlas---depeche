@@ -96,11 +96,29 @@ export default async function AdminArticlesPage() {
 
   return (
     <main style={{ fontFamily: "system-ui", padding: "2rem", maxWidth: 1100 }}>
-      <h1>CMS — drafts pending review</h1>
+      <h1>Atlas Dépêche — Articles</h1>
+      <p style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
+        <a
+          href="#ecrire"
+          style={{
+            background: "#2a6",
+            color: "#fff",
+            fontWeight: 700,
+            padding: "0.45rem 0.9rem",
+            borderRadius: 4,
+            textDecoration: "none",
+          }}
+        >
+          ➕ Nouvel article
+        </a>
+        <span style={{ fontSize: "0.9em", color: "#555" }}>
+          Pour corriger un article existant : bouton bleu « ✏️ Modifier l&apos;article » sous chaque article.
+        </span>
+      </p>
       <p>ASSISTED mode: approving publishes immediately to the public site.</p>
 
       <section style={{ border: "2px solid #2a6", borderRadius: 8, padding: "1rem", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>Écrire un article / كتابة مقال</h2>
+        <h2 id="ecrire" style={{ fontSize: "1.1rem", marginTop: 0 }}>Écrire un article / كتابة مقال</h2>
         <p style={{ fontSize: "0.9em", color: "#555" }}>
           Écrivez votre article et publiez-le directement — sans IA, gratuit. Choisissez
           « Article libre » pour écrire sur n&apos;importe quel sujet, ou rattachez-le à un
@@ -217,8 +235,21 @@ export default async function AdminArticlesPage() {
                         )}
                         <div>{renderArticleBody(article.body)}</div>
                         {(article.status === "published" || article.status === "corrected") && (
-                          <details>
-                            <summary>Correct this article</summary>
+                          <details style={{ marginTop: "0.5rem" }}>
+                            <summary
+                              style={{
+                                display: "inline-block",
+                                cursor: "pointer",
+                                background: "#1d7fd8",
+                                color: "#fff",
+                                fontWeight: 600,
+                                padding: "0.35rem 0.8rem",
+                                borderRadius: 4,
+                                listStyle: "none",
+                              }}
+                            >
+                              ✏️ Modifier l&apos;article (texte, titre, photo, rubrique)
+                            </summary>
                             <form action={correctArticle.bind(null, article.articleId)} style={{ marginTop: "0.5rem" }}>
                               <input
                                 name="title"
@@ -257,7 +288,20 @@ export default async function AdminArticlesPage() {
                                   corrigé » (avec « Modification mineure »)
                                 </label>
                               )}
-                              <button type="submit">Save correction</button>
+                              <button
+                                type="submit"
+                                style={{
+                                  background: "#2a6",
+                                  color: "#fff",
+                                  fontWeight: 700,
+                                  border: "none",
+                                  borderRadius: 4,
+                                  padding: "0.45rem 1rem",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                💾 Enregistrer les modifications
+                              </button>
                             </form>
                           </details>
                         )}
