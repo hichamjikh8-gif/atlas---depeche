@@ -1,8 +1,9 @@
 import { and, desc, eq, inArray, isNull, or, ilike, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { articles, socialPosts, sourceItems, sources } from "@/db/schema";
+import { articles, events, socialPosts, sourceItems, sources } from "@/db/schema";
 import type { Locale } from "@/i18n/locales";
 import { dedupeRadarItems, isLikelyHomepageTitle, isMoroccoRelevant } from "@/lib/radar-filters";
+import { categoriesClaimedElsewhere, type Rubrique } from "@/lib/rubriques";
 
 export const RADAR_PAGE_SIZE = 50;
 
@@ -282,4 +283,65 @@ export async function searchArticles(locale: Locale, query: string) {
     )
     .orderBy(desc(articles.publishedAt))
     .limit(50);
+}
+
+
+/**
+ * Articles of one rubrique (see src/lib/rubriques.ts), newest first, same
+ * shape as getHomeArticles. "Actualité" also collects every category no
+ * other rubrique claims, so no article is ever left without a section.
+ */
+export async function getRubriqueArticles(
+  locale: Locale,
+  rubrique: Rubrique,
+  page: number,
+): Promise<Awaited<ReturnType<typeof getHomeArticles>>> {
+  const categoryFilter =
+    rubrique.slug === "actualite"
+      ? sql`${events.category} not in (${sql.join(
+          categoriesClaimedElsewhere("actualite").map((c) => sql`${c}`),
+          sql`, `,
+        )})`
+      : inArray(events.category, [...rubrique.categories]);
+  const where = and(eq(articles.locale, locale), inArray(articles.status, PUBLIC_STATUSES), categoryFilter);
+
+  const [countRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(articles)
+    .innerJoin(events, eq(articles.eventId, events.id))
+    .where(where);
+  const total = countRow?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / RADAR_PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+
+  const rows = await db
+    .select({
+      id: articles.id,
+      title: articles.title,
+      slug: articles.slug,
+      body: articles.body,
+      imageUrl: articles.imageUrl,
+      publishedAt: articles.publishedAt,
+      createdAt: articles.createdAt,
+    })
+    .from(articles)
+    .innerJoin(events, eq(articles.eventId, events.id))
+    .where(where)
+    .orderBy(desc(sql`coalesce(${articles.publishedAt}, ${articles.createdAt})`))
+    .limit(RADAR_PAGE_SIZE)
+    .offset((safePage - 1) * RADAR_PAGE_SIZE);
+
+  return {
+    items: rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      url: `/${locale}/${r.slug}`,
+      imageUrl: r.imageUrl,
+      publishedAt: r.publishedAt,
+      fetchedAt: r.publishedAt ?? r.createdAt,
+      sourceName: articleOriginName(r.body),
+    })),
+    page: safePage,
+    totalPages,
+  };
 }
