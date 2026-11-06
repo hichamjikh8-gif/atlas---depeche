@@ -3,8 +3,11 @@ import { getHomeArticles } from "@/lib/public-site";
 import { getWorldHeadlines } from "@/lib/world-headlines";
 
 const TICKER_ITEM_COUNT = 30;
-// Slowed down twice now (was 45s, then 90s) — still reported as too fast.
-const TICKER_DURATION_SECONDS = 160;
+// Speed is now tied to the amount of text, not a fixed duration: with 30
+// world headlines a fixed 160s loop scrolled far too fast (reported
+// 2026-11-06). ~4 characters per second reads calmly; never under 160s.
+const TICKER_CHARS_PER_SECOND = 4;
+const TICKER_MIN_DURATION_SECONDS = 160;
 
 /**
  * Scrolling headline strip at the top of the page. Direction follows each
@@ -31,6 +34,9 @@ export async function BreakingTicker({ locale }: { locale: Locale }) {
           .map((a) => ({ id: a.id, title: a.title, url: a.url, source: null }));
 
   if (headlines.length === 0) return null;
+
+  const textLength = headlines.reduce((n, h) => n + h.title.length + (h.source?.length ?? 0) + 6, 0);
+  const durationSeconds = Math.max(TICKER_MIN_DURATION_SECONDS, Math.round(textLength / TICKER_CHARS_PER_SECOND));
 
   const headlineLink = (item: (typeof headlines)[number], keyPrefix: string) => (
     <a
@@ -139,7 +145,7 @@ export async function BreakingTicker({ locale }: { locale: Locale }) {
             paddingBlock: "var(--space-2)",
             paddingInlineStart: "var(--space-6)",
             animationName: "ticker-scroll",
-            animationDuration: `${TICKER_DURATION_SECONDS}s`,
+            animationDuration: `${durationSeconds}s`,
             animationTimingFunction: "linear",
             animationIterationCount: "infinite",
             // Track content is the SAME list rendered twice (below), so
