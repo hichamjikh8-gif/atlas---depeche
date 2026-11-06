@@ -62,6 +62,8 @@ export interface PartnerItem {
   imageUrl: string | null;
   /** Direct video file attached to the original post (e.g. an .mp4 enclosure), shown on the article page. */
   videoUrl?: string | null;
+  /** The partner site's own category names (Souss Actualités WordPress categories). */
+  categories?: string[];
   publishedAt: Date | null;
 }
 
@@ -149,6 +151,7 @@ export async function fetchPartnerItems(site: PartnerSite): Promise<PartnerItem[
         excerpt: cleanExcerpt(i.summary),
         imageUrl,
         videoUrl: i.imageUrl && !isLikelyImageUrl(i.imageUrl) ? i.imageUrl : null,
+        categories: i.categories,
         publishedAt: i.publishedAt ?? null,
       });
     }

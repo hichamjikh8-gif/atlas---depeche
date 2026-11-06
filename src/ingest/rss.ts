@@ -61,6 +61,9 @@ export async function fetchRssItems(feedUrl: string): Promise<RawItem[]> {
       summary: item.contentSnippet?.trim() || item.content?.trim() || undefined,
       publishedAt: item.isoDate ? new Date(item.isoDate) : undefined,
       imageUrl,
+      categories: Array.isArray(item.categories)
+        ? item.categories.map((c) => (typeof c === "string" ? c : String((c as { _?: string })?._ ?? ""))).filter(Boolean)
+        : undefined,
     };
   });
 }

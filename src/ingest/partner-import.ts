@@ -6,6 +6,7 @@ import {
   fetchPartnerItems,
   partnerFingerprint,
 } from "@/ingest/partners";
+import { mapPartnerCategories } from "@/lib/rubriques";
 import { slugify } from "@/lib/slugify";
 
 /**
@@ -49,6 +50,8 @@ export async function runPartnerImport(
       const locale = site.locale ?? detectLocale(item.title);
       const fingerprint = partnerFingerprint(item.url);
       const body = buildPartnerBody(site, item, locale);
+      // Rubrique from the partner's own categories (e.g. Souss "International" → international).
+      const category = mapPartnerCategories(item.categories, site.category);
 
       if (DRY_RUN) {
         console.log(`  [dry-run] ${locale} | ${item.title}\n    ${item.url}\n    image=${item.imageUrl ?? "-"}`);
@@ -67,6 +70,13 @@ export async function runPartnerImport(
           .limit(1);
         if (existing.length > 0) {
           skipped++;
+          // Classify earlier imports that still carry the site's default category.
+          if (category !== site.category) {
+            await db
+              .update(events)
+              .set({ category })
+              .where(and(eq(events.id, existing[0]!.id), eq(events.category, site.category)));
+          }
           // Backfill a photo found later (e.g. via og:image) onto an article imported without one.
           if (item.imageUrl) {
             await db
@@ -111,7 +121,7 @@ export async function runPartnerImport(
           .insert(events)
           .values({
             title: item.title,
-            category: site.category,
+            category,
             status: "candidate",
             fingerprint,
             occurredAt: item.publishedAt ?? undefined,
