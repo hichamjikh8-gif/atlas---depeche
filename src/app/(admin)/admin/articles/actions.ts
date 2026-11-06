@@ -74,6 +74,10 @@ export async function createManualArticle(formData: FormData) {
   // request: write about any subject, WordPress-style, without first
   // needing the radar to have collected it.
   let eventId = typeof eventIdRaw === "string" ? eventIdRaw.trim() : "";
+  if (eventId && typeof categoryRaw === "string" && MANUAL_CATEGORY_VALUES.has(categoryRaw)) {
+    // Rubrique chosen in the form also applies when writing about a radar event.
+    await db.update(events).set({ category: categoryRaw }).where(eq(events.id, eventId));
+  }
   if (!eventId) {
     const category =
       typeof categoryRaw === "string" && MANUAL_CATEGORY_VALUES.has(categoryRaw) ? categoryRaw : "news";

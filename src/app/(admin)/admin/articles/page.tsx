@@ -6,6 +6,8 @@ import { renderArticleBody } from "@/lib/article-format";
 import { approveEventArticles, correctArticle, createManualArticle, deleteArticle, unpublishArticle } from "./actions";
 import { DeleteArticleButton } from "./DeleteArticleButton";
 import { RichEditor } from "./RichEditor";
+import { ImageUpload } from "./ImageUpload";
+import { RUBRIQUES, rubriqueForCategory } from "@/lib/rubriques";
 import { MANUAL_CATEGORIES } from "./manual-categories";
 
 export const metadata: Metadata = {
@@ -118,6 +120,25 @@ export default async function AdminArticlesPage() {
               </select>
             </label>
           </div>
+          <div
+            style={{
+              marginBottom: "0.75rem",
+              padding: "0.6rem",
+              border: "2px solid #1d7fd8",
+              borderRadius: 6,
+              background: "#f3f8fe",
+            }}
+          >
+            <label style={{ fontWeight: 700 }}>
+              Rubrique / القسم * :{" "}
+              <select name="category" required defaultValue="news" style={{ padding: "0.35rem", fontSize: "1rem" }}>
+                <RubriqueOptions />
+              </select>
+            </label>
+            <span style={{ fontSize: "0.85em", color: "#555", marginInlineStart: "0.5rem" }}>
+              L&apos;article apparaîtra dans cette rubrique du site.
+            </span>
+          </div>
           <div style={{ marginBottom: "0.5rem" }}>
             <label>
               Language:{" "}
@@ -126,16 +147,7 @@ export default async function AdminArticlesPage() {
                 <option value="ar">العربية</option>
               </select>
             </label>{" "}
-            <label style={{ marginInlineStart: "1rem" }}>
-              Rubrique (article libre) :{" "}
-              <select name="category" defaultValue="news">
-                {MANUAL_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </label>{" "}
+
             <label style={{ marginInlineStart: "1rem" }}>
               Lieu :{" "}
               <input name="location" placeholder="ex. Agadir" style={{ padding: "0.2rem 0.4rem" }} />
@@ -153,12 +165,7 @@ export default async function AdminArticlesPage() {
             <RichEditor name="body" required placeholder="Texte de l'article / نص المقال" />
           </div>
           <div style={{ marginBottom: "0.5rem" }}>
-            <input
-              name="imageUrl"
-              type="url"
-              placeholder="Photo URL (optionnel) — https://..."
-              style={{ width: "100%", padding: "0.4rem" }}
-            />
+            <ImageUpload name="imageUrl" />
           </div>
           <div style={{ marginBottom: "0.5rem" }}>
             <input
@@ -221,13 +228,9 @@ export default async function AdminArticlesPage() {
                               <div style={{ marginBottom: "0.5rem" }}>
                                 <RichEditor name="body" defaultValue={article.body} rows={10} required />
                               </div>
-                              <input
-                                name="imageUrl"
-                                type="url"
-                                defaultValue={article.imageUrl ?? ""}
-                                placeholder="Photo URL"
-                                style={{ width: "100%", marginBottom: "0.5rem" }}
-                              />
+                              <div style={{ marginBottom: "0.5rem" }}>
+                                <ImageUpload name="imageUrl" defaultValue={article.imageUrl ?? ""} />
+                              </div>
                               <input
                                 name="videoUrl"
                                 type="url"
@@ -241,11 +244,7 @@ export default async function AdminArticlesPage() {
                                   {!MANUAL_CATEGORIES.some((c) => c.value === g.eventCategory) && (
                                     <option value={g.eventCategory}>{g.eventCategory}</option>
                                   )}
-                                  {MANUAL_CATEGORIES.map((c) => (
-                                    <option key={c.value} value={c.value}>
-                                      {c.label}
-                                    </option>
-                                  ))}
+                                  <RubriqueOptions />
                                 </select>
                               </label>
                               <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9em" }}>
@@ -286,5 +285,27 @@ export default async function AdminArticlesPage() {
         );
       })}
     </main>
+  );
+}
+
+
+/** Category options grouped by public rubrique (Actualité, International, Sport…). */
+function RubriqueOptions() {
+  return (
+    <>
+      {RUBRIQUES.map((r) => {
+        const options = MANUAL_CATEGORIES.filter((c) => rubriqueForCategory(c.value).slug === r.slug);
+        if (options.length === 0) return null;
+        return (
+          <optgroup key={r.slug} label={`${r.fr} / ${r.ar}`}>
+            {options.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </optgroup>
+        );
+      })}
+    </>
   );
 }
