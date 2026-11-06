@@ -7,6 +7,8 @@ export interface Rubrique {
   slug: "actualite" | "international" | "sport" | "crypto" | "divers" | "publicite";
   fr: string;
   ar: string;
+  /** Signature colour of the rubrique (nav pill, page title, card accents). */
+  color: string;
   categories: readonly string[];
 }
 
@@ -15,18 +17,20 @@ export const RUBRIQUES: readonly Rubrique[] = [
     slug: "actualite",
     fr: "Actualité",
     ar: "مستجدات",
+    color: "#E63946",
     categories: ["news", "politics", "society", "economy", "institutional", "justice", "security"],
   },
-  { slug: "international", fr: "International", ar: "دولي", categories: ["international", "diplomacy"] },
-  { slug: "sport", fr: "Sport", ar: "رياضة", categories: ["sports"] },
-  { slug: "crypto", fr: "Crypto-monnaie", ar: "العملات الرقمية", categories: ["crypto"] },
+  { slug: "international", fr: "International", ar: "دولي", color: "#1D7FD8", categories: ["international", "diplomacy"] },
+  { slug: "sport", fr: "Sport", ar: "رياضة", color: "#2BA84A", categories: ["sports"] },
+  { slug: "crypto", fr: "Crypto-monnaie", ar: "العملات الرقمية", color: "#F7931A", categories: ["crypto"] },
   {
     slug: "divers",
     fr: "Divers",
     ar: "متفرقات",
+    color: "#8E44AD",
     categories: ["culture", "personalities", "personalities-intl", "diaspora", "tourism", "divers"],
   },
-  { slug: "publicite", fr: "Publicité", ar: "إشهار", categories: ["publicite"] },
+  { slug: "publicite", fr: "Publicité", ar: "إشهار", color: "#C9A227", categories: ["publicite"] },
 ];
 
 export function getRubrique(slug: string): Rubrique | undefined {
