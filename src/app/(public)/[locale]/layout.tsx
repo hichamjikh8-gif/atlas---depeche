@@ -12,6 +12,7 @@ import { inter, lora } from "@/lib/fonts";
 import { notoNaskhArabic } from "@/lib/fonts-ar";
 import { ShareLinks } from "@/components/ShareLinks";
 import { BreakingTicker } from "@/components/BreakingTicker";
+import { RubriqueNav } from "@/components/RubriqueNav";
 import { AdFlash } from "@/components/AdFlash";
 import "@/app/globals.css";
 import { getSiteUrl } from "@/lib/site-url";
@@ -164,6 +165,8 @@ export default async function PublicLocaleLayout({
             </nav>
           </div>
         </header>
+
+        <RubriqueNav locale={locale} />
 
         <BreakingTicker locale={locale} />
 
