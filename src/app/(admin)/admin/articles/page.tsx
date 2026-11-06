@@ -236,6 +236,19 @@ export default async function AdminArticlesPage() {
                                 style={{ width: "100%", marginBottom: "0.5rem" }}
                               />
                               <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9em" }}>
+                                Rubrique :{" "}
+                                <select name="category" defaultValue={g.eventCategory}>
+                                  {!MANUAL_CATEGORIES.some((c) => c.value === g.eventCategory) && (
+                                    <option value={g.eventCategory}>{g.eventCategory}</option>
+                                  )}
+                                  {MANUAL_CATEGORIES.map((c) => (
+                                    <option key={c.value} value={c.value}>
+                                      {c.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9em" }}>
                                 <input type="checkbox" name="minor" defaultChecked /> Modification mineure (style, mise en page) —
                                 sans avis « article corrigé »
                               </label>

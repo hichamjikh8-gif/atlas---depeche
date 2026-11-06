@@ -15,6 +15,9 @@ export const MANUAL_CATEGORIES = [
   { value: "institutional", label: "Institutionnel / مؤسسات" },
   { value: "personalities", label: "Personnalités / شخصيات" },
   { value: "international", label: "International / دولي" },
+  { value: "crypto", label: "Crypto-monnaie / العملات الرقمية" },
+  { value: "publicite", label: "Publicité / إشهار" },
+  { value: "divers", label: "Divers / متفرقات" },
 ] as const;
 
 export const MANUAL_CATEGORY_VALUES: ReadonlySet<string> = new Set(MANUAL_CATEGORIES.map((c) => c.value));

@@ -222,6 +222,7 @@ export async function correctArticle(articleId: string, formData: FormData) {
   // audit-logged, but the article keeps its status, so no public
   // "corrigé le…" notice. Real factual corrections must leave it unchecked.
   const minor = formData.get("minor") === "on";
+  const newCategoryRaw = formData.get("category");
   // Lets the editor take back a "corrigé le…" notice set by mistake (e.g. a
   // style edit saved without ticking "Modification mineure"). Only with minor.
   const removeNotice = minor && formData.get("removeNotice") === "on";
@@ -260,6 +261,11 @@ export async function correctArticle(articleId: string, formData: FormData) {
       updatedAt: sql`now()`,
     })
     .where(eq(articles.id, articleId));
+
+  // Rubrique change (events.category) — classification only, not a correction.
+  if (typeof newCategoryRaw === "string" && MANUAL_CATEGORY_VALUES.has(newCategoryRaw)) {
+    await db.update(events).set({ category: newCategoryRaw }).where(eq(events.id, article.eventId));
+  }
 
   await db.insert(auditLogs).values({
     entityType: "article",
