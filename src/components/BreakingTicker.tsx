@@ -1,7 +1,8 @@
 import { getDictionary, type Locale } from "@/i18n/locales";
 import { getHomeArticles } from "@/lib/public-site";
+import { getWorldHeadlines } from "@/lib/world-headlines";
 
-const TICKER_ITEM_COUNT = 12;
+const TICKER_ITEM_COUNT = 30;
 // Slowed down twice now (was 45s, then 90s) — still reported as too fast.
 const TICKER_DURATION_SECONDS = 160;
 
@@ -12,14 +13,22 @@ const TICKER_DURATION_SECONDS = 160;
  * `ticker-scroll` keyframe in globals.css for how one keyframe drives both
  * directions via `animation-direction`.
  *
- * Since 2026-11-05 headlines are Atlas Dépêche's own article pages (Souss
- * Actualités + RexFoot imports and hand-written articles), same feed as the
- * homepage cards — see getHomeArticles in src/lib/public-site.ts.
+ * Headlines: world news of the last 24 hours (see getWorldHeadlines below),
+ * with Atlas Dépêche's own articles as a fallback.
  */
 export async function BreakingTicker({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
-  const { items } = await getHomeArticles(locale, 1);
-  const headlines = items.slice(0, TICKER_ITEM_COUNT);
+  // Since 2026-11-06: world headlines of the last 24 hours (France 24, RFI,
+  // Le Monde, BBC… — see src/lib/world-headlines.ts), each linking to the
+  // original article. Falls back to Atlas Dépêche's own articles if every
+  // feed is unreachable.
+  const world = await getWorldHeadlines(locale === "ar" ? "ar" : "fr").catch(() => []);
+  const headlines: Array<{ id: string; title: string; url: string; source: string | null }> =
+    world.length > 0
+      ? world.slice(0, TICKER_ITEM_COUNT).map((w) => ({ id: w.id, title: w.title, url: w.url, source: w.source }))
+      : (await getHomeArticles(locale, 1)).items
+          .slice(0, TICKER_ITEM_COUNT)
+          .map((a) => ({ id: a.id, title: a.title, url: a.url, source: null }));
 
   if (headlines.length === 0) return null;
 
@@ -27,6 +36,7 @@ export async function BreakingTicker({ locale }: { locale: Locale }) {
     <a
       key={`${keyPrefix}-${item.id}`}
       href={item.url}
+      {...(item.source ? { target: "_blank", rel: "noopener nofollow" } : {})}
       dir={locale === "ar" ? "rtl" : "ltr"}
       style={{
         display: "inline-flex",
@@ -46,6 +56,20 @@ export async function BreakingTicker({ locale }: { locale: Locale }) {
         unicodeBidi: "isolate",
       }}
     >
+      {item.source && (
+        <span
+          style={{
+            color: "var(--color-breaking)",
+            fontWeight: 700,
+            fontSize: "var(--text-xs)",
+            marginInlineEnd: "var(--space-2)",
+            textTransform: "uppercase",
+            letterSpacing: "0.03em",
+          }}
+        >
+          {item.source}
+        </span>
+      )}
       {item.title}
       <span
         aria-hidden="true"
