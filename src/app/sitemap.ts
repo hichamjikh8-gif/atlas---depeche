@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SUPPORTED_LOCALES } from "@/i18n/locales";
+import { RUBRIQUES } from "@/lib/rubriques";
 import { getSiteUrl } from "@/lib/site-url";
 
 // Rendered per request (reads the DB), never at build time — the build has no database.
@@ -19,6 +20,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/${locale}/legal/privacy`, changeFrequency: "monthly" as const, priority: 0.3 },
     { url: `${SITE_URL}/${locale}/legal/corrections`, changeFrequency: "monthly" as const, priority: 0.3 },
     { url: `${SITE_URL}/${locale}/contact`, changeFrequency: "monthly" as const, priority: 0.3 },
+    ...RUBRIQUES.map((r) => ({
+      url: `${SITE_URL}/${locale}/rubrique/${r.slug}`,
+      changeFrequency: "hourly" as const,
+      priority: 0.7,
+    })),
   ]);
 
   let articlePages: MetadataRoute.Sitemap = [];

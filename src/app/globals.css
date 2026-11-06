@@ -306,3 +306,7 @@
     widows: 3;
   }
 }
+
+/* Rubrique bar (src/components/RubriqueNav.tsx): scrollable without a visible scrollbar */
+.rubrique-nav::-webkit-scrollbar { display: none; }
+.rubrique-nav a:hover { color: var(--color-accent); }
