@@ -12,8 +12,12 @@ import { RUBRIQUES } from "@/lib/rubriques";
 export function RubriqueNav({ locale }: { locale: "fr" | "ar" }) {
   const pathname = usePathname() ?? "";
   const items = [
-    { href: `/${locale}`, label: locale === "ar" ? "الرئيسية" : "Accueil" },
-    ...RUBRIQUES.map((r) => ({ href: `/${locale}/rubrique/${r.slug}`, label: locale === "ar" ? r.ar : r.fr })),
+    { href: `/${locale}`, label: locale === "ar" ? "الرئيسية" : "Accueil", color: null as string | null },
+    ...RUBRIQUES.map((r) => ({
+      href: `/${locale}/rubrique/${r.slug}`,
+      label: locale === "ar" ? r.ar : r.fr,
+      color: r.color as string | null,
+    })),
   ];
 
   return (
@@ -57,8 +61,12 @@ export function RubriqueNav({ locale }: { locale: "fr" | "ar" }) {
                   letterSpacing: locale === "ar" ? 0 : "0.02em",
                   textTransform: locale === "ar" ? "none" : "uppercase",
                   textDecoration: "none",
-                  color: active ? "#ffffff" : "var(--color-text-secondary, var(--color-text))",
-                  backgroundImage: active ? "linear-gradient(135deg, var(--color-accent), #D62976)" : "none",
+                  // Each rubrique has its own colour: coloured text + thin coloured
+                  // underline when idle, filled pill when it's the current page.
+                  color: active ? "#ffffff" : (item.color ?? "var(--color-text-secondary, var(--color-text))"),
+                  backgroundColor: active && item.color ? item.color : "transparent",
+                  backgroundImage: active && !item.color ? "linear-gradient(135deg, var(--color-accent), #D62976)" : "none",
+                  boxShadow: !active && item.color ? `inset 0 -2px 0 ${item.color}` : "none",
                   transition: "color var(--transition-fast), background-color var(--transition-fast)",
                 }}
               >
