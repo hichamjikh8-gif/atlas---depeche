@@ -53,11 +53,9 @@ export default async function RubriquePage({ params, searchParams }: Props) {
           fontFamily: "var(--font-serif)",
           fontSize: "var(--text-3xl)",
           marginBlockEnd: "var(--space-8)",
-          backgroundImage: "linear-gradient(135deg, var(--color-accent), #D62976)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          color: "transparent",
+          color: rubrique.color,
+          paddingInlineStart: "var(--space-3)",
+          borderInlineStart: `6px solid ${rubrique.color}`,
         }}
       >
         {name}
@@ -95,6 +93,7 @@ export default async function RubriquePage({ params, searchParams }: Props) {
                   display: "flex",
                   flexDirection: "column",
                   border: "2px solid #D4AF37",
+                  borderBlockStart: `4px solid ${rubrique.color}`,
                   borderRadius: "6px",
                   overflow: "hidden",
                   background: "var(--color-bg-elevated)",
