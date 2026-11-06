@@ -309,4 +309,4 @@
 
 /* Rubrique bar (src/components/RubriqueNav.tsx): scrollable without a visible scrollbar */
 .rubrique-nav::-webkit-scrollbar { display: none; }
-.rubrique-nav a:hover { color: var(--color-accent); }
+.rubrique-nav a:hover { filter: brightness(1.25); }
