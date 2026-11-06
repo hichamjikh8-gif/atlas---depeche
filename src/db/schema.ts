@@ -9,6 +9,7 @@ export * from "./schema-advertising"; // advertising tables — isolated module,
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  customType,
   index,
   integer,
   jsonb,
@@ -507,3 +508,23 @@ export const socialPosts = pgTable(
     index("social_posts_status_idx").on(table.status),
   ],
 );
+
+
+// --- uploaded_images ---------------------------------------------------
+// Photos uploaded from the CMS (phone or computer) — added 2026-11-06.
+// Stored in Postgres so they survive redeploys (the web container's disk is
+// ephemeral); served publicly by src/app/media/[id]/route.ts. Images are
+// resized client-side before upload (max 1600px JPEG), so rows stay small.
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});
+
+export const uploadedImages = pgTable("uploaded_images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  mimeType: text("mime_type").notNull(),
+  data: bytea("data").notNull(),
+  byteSize: integer("byte_size").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
