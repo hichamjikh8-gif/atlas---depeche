@@ -1,13 +1,16 @@
 import { getDictionary, type Locale } from "@/i18n/locales";
 import { getHomeArticles } from "@/lib/public-site";
 import { getWorldHeadlines } from "@/lib/world-headlines";
+import { TickerChime } from "@/components/TickerChime";
 
 const TICKER_ITEM_COUNT = 30;
 // Speed is now tied to the amount of text, not a fixed duration: with 30
 // world headlines a fixed 160s loop scrolled far too fast (reported
 // 2026-11-06). ~4 characters per second reads calmly; never under 160s.
-const TICKER_CHARS_PER_SECOND = 4;
-const TICKER_MIN_DURATION_SECONDS = 160;
+// 2026-11-09: a bit faster on request (was 4 cps / min 160s, which felt too slow),
+// but still well below the old fixed-duration speed that was too fast.
+const TICKER_CHARS_PER_SECOND = 6;
+const TICKER_MIN_DURATION_SECONDS = 110;
 
 /**
  * Scrolling headline strip at the top of the page. Direction follows each
@@ -179,6 +182,7 @@ export async function BreakingTicker({ locale }: { locale: Locale }) {
           {headlines.map((item) => headlineLink(item, "b"))}
         </div>
       </div>
+      <TickerChime ids={headlines.map((h) => h.id)} />
     </div>
   );
 }
