@@ -78,9 +78,6 @@ export default async function MentionsPage({
       <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "var(--text-xl)", marginBlockEnd: "var(--space-4)" }}>
         {c.teamTitle}
       </h2>
-      <p style={p}>
-        <strong>{c.founderLabel} :</strong> {c.founderName}
-      </p>
       <figure style={{ margin: 0, marginBlockEnd: "var(--space-6)" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -100,6 +97,29 @@ export default async function MentionsPage({
           {line}
         </p>
       ))}
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Aref+Ruqaa:wght@700&display=swap');
+        .ad-founder { margin-block-start: var(--space-8, 3rem); text-align: center; }
+        .ad-founder summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+          inline-size: 34px; block-size: 34px; border-radius: 50%; border: 1px solid rgba(212,175,55,.55);
+          color: #d4af37; font-size: 22px; line-height: 1; opacity: .7; transition: transform .35s ease, opacity .35s ease; user-select: none; }
+        .ad-founder summary::-webkit-details-marker { display: none; }
+        .ad-founder summary:hover { opacity: 1; }
+        .ad-founder[open] summary { transform: rotate(45deg); opacity: 1; }
+        .ad-founder .ad-founder-txt { margin-block-start: var(--space-4, 1rem); animation: adFade .6s ease both; }
+        .ad-founder .ad-founder-lbl { display: block; font-family: var(--font-serif); font-size: .8rem; letter-spacing: .25em; text-transform: uppercase; color: #b9b3a0; }
+        .ad-founder .ad-founder-name { display: block; font-family: 'Great Vibes', cursive; font-size: 2.6rem; color: #d4af37; line-height: 1.3; }
+        .ad-founder .ad-founder-name.ar { font-family: 'Aref Ruqaa', serif; font-size: 2.2rem; }
+        @keyframes adFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      `}</style>
+      <details className="ad-founder">
+        <summary aria-label={c.founderLabel}>+</summary>
+        <div className="ad-founder-txt">
+          <span className="ad-founder-lbl">{c.founderLabel}</span>
+          <span className={locale === "ar" ? "ad-founder-name ar" : "ad-founder-name"}>{c.founderName}</span>
+        </div>
+      </details>
     </div>
   );
 }
