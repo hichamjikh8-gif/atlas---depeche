@@ -8,6 +8,7 @@ import { transitionEvent } from "@/lib/event-state-machine";
 import { slugify } from "@/lib/slugify";
 import { requireAdminSession } from "@/lib/require-admin";
 import { MANUAL_CATEGORY_VALUES } from "./manual-categories";
+import { applySignature, isSignerId } from "@/lib/article-signature";
 
 /**
  * ASSISTED mode's human-approval step (MASTER_PROMPT section 11) — and,
@@ -56,7 +57,12 @@ export async function createManualArticle(formData: FormData) {
   const eventIdRaw = formData.get("eventId");
   const locale = formData.get("locale");
   const title = formData.get("title");
-  const body = formData.get("body");
+  const bodyRaw = formData.get("body");
+  const signerRaw = formData.get("signature");
+  const body =
+    typeof bodyRaw === "string" && bodyRaw.trim()
+      ? applySignature(bodyRaw, isSignerId(signerRaw) ? signerRaw : null)
+      : bodyRaw;
   const imageUrlRaw = formData.get("imageUrl");
   const videoUrlRaw = formData.get("videoUrl");
   const categoryRaw = formData.get("category");
@@ -218,7 +224,12 @@ export async function deleteArticle(articleId: string) {
 export async function correctArticle(articleId: string, formData: FormData) {
   await requireAdminSession();
   const newTitle = formData.get("title");
-  const newBody = formData.get("body");
+  const newBodyRaw = formData.get("body");
+  const newSignerRaw = formData.get("signature");
+  const newBody =
+    typeof newBodyRaw === "string" && newBodyRaw.trim()
+      ? applySignature(newBodyRaw, isSignerId(newSignerRaw) ? newSignerRaw : null)
+      : newBodyRaw;
   const imageUrlRaw = formData.get("imageUrl");
   const videoUrlRaw = formData.get("videoUrl");
   // "Modification mineure" (added 2026-11-05): an editorial touch-up (style,

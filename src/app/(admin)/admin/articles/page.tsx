@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { articleSources, articles, events } from "@/db/schema";
 import { renderArticleBody } from "@/lib/article-format";
+import { extractSignature } from "@/lib/article-signature";
 import { approveEventArticles, correctArticle, createManualArticle, deleteArticle, unpublishArticle } from "./actions";
 import { DeleteArticleButton } from "./DeleteArticleButton";
 import { RichEditor } from "./RichEditor";
@@ -78,6 +79,19 @@ async function getRecentEventsForManualWrite() {
     .from(events)
     .orderBy(desc(events.detectedAt))
     .limit(40);
+}
+
+function SignatureSelect({ defaultValue = "" }: { defaultValue?: string }) {
+  return (
+    <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.95em" }}>
+      ✍️ Signature / التوقيع :{" "}
+      <select name="signature" defaultValue={defaultValue} style={{ padding: "0.3rem" }}>
+        <option value="">Aucune / بدون</option>
+        <option value="hicham">Hicham Jikh Cheddad</option>
+        <option value="redouane">Redouane Jikh</option>
+      </select>
+    </label>
+  );
 }
 
 export default async function AdminArticlesPage() {
@@ -182,6 +196,7 @@ export default async function AdminArticlesPage() {
           <div style={{ marginBottom: "0.5rem" }}>
             <RichEditor name="body" required placeholder="Texte de l'article / نص المقال" />
           </div>
+          <SignatureSelect />
           <div style={{ marginBottom: "0.5rem" }}>
             <ImageUpload name="imageUrl" />
           </div>
@@ -233,7 +248,7 @@ export default async function AdminArticlesPage() {
                             🎬 <a href={article.videoUrl} target="_blank" rel="noopener noreferrer">{article.videoUrl}</a>
                           </p>
                         )}
-                        <div>{renderArticleBody(article.body)}</div>
+                        <div>{renderArticleBody(article.body, locale)}</div>
                         {(article.status === "published" || article.status === "corrected") && (
                           <details style={{ marginTop: "0.5rem" }}>
                             <summary
@@ -257,8 +272,9 @@ export default async function AdminArticlesPage() {
                                 style={{ width: "100%", marginBottom: "0.5rem" }}
                               />
                               <div style={{ marginBottom: "0.5rem" }}>
-                                <RichEditor name="body" defaultValue={article.body} rows={10} required />
+                                <RichEditor name="body" defaultValue={extractSignature(article.body).body} rows={10} required />
                               </div>
+                              <SignatureSelect defaultValue={extractSignature(article.body).signer ?? ""} />
                               <div style={{ marginBottom: "0.5rem" }}>
                                 <ImageUpload name="imageUrl" defaultValue={article.imageUrl ?? ""} />
                               </div>

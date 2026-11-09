@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/i18n/locales";
 import { renderArticleBody, stripArticleFormatting } from "@/lib/article-format";
+import { extractSignature, signerName } from "@/lib/article-signature";
 import { getPublishedArticleBySlug } from "@/lib/public-site";
 import { toEmbeddableVideoUrl } from "@/lib/video-embed";
 
@@ -59,6 +60,7 @@ export default async function ArticlePage({
   const publishedDate = article.publishedAt?.toISOString().slice(0, 10);
   const updatedDate = article.updatedAt.toISOString().slice(0, 10);
 
+  const { signer } = extractSignature(article.body);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -66,6 +68,7 @@ export default async function ArticlePage({
     datePublished: article.publishedAt?.toISOString(),
     dateModified: article.updatedAt.toISOString(),
     inLanguage: locale,
+    ...(signer ? { author: { "@type": "Person", name: signerName(signer, locale) } } : {}),
   };
 
   return (
@@ -209,7 +212,7 @@ export default async function ArticlePage({
           color: "var(--color-text)",
         }}
       >
-        {renderArticleBody(article.body)}
+        {renderArticleBody(article.body, locale)}
       </div>
 
       <aside

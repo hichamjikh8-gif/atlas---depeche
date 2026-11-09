@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { linkifyText } from "@/lib/linkify";
+import { extractSignature, signerName, type SignerId } from "@/lib/article-signature";
 
 /**
  * Article body formatting — a small, safe Markdown subset used by the
@@ -60,9 +61,30 @@ function renderLines(text: string, keyPrefix: string): ReactNode[] {
   return out;
 }
 
-export function renderArticleBody(body: string): ReactNode[] {
+/**
+ * The gold handwritten signature at the bottom of a signed article — same
+ * look as the names on the "Mentions légales" page (Great Vibes / Aref
+ * Ruqaa, #d4af37). See src/lib/article-signature.ts.
+ */
+export function ArticleSignature({ signer, locale }: { signer: SignerId; locale: string }) {
+  const ar = locale === "ar";
+  return (
+    <div className="ad-signature" style={{ marginBlock: "var(--space-8, 2.5rem) var(--space-4, 1rem)", textAlign: "end" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Aref+Ruqaa:wght@700&display=swap');
+        .ad-signature .ad-signature-name { display: inline-block; font-family: 'Great Vibes', cursive; font-size: 2.6rem; font-weight: 400; color: #d4af37; line-height: 1.3; }
+        .ad-signature .ad-signature-name.ar { font-family: 'Aref Ruqaa', serif; font-size: 2.2rem; font-weight: 700; }
+      `}</style>
+      <span className={ar ? "ad-signature-name ar" : "ad-signature-name"}>{signerName(signer, locale)}</span>
+    </div>
+  );
+}
+
+export function renderArticleBody(rawBody: string, locale?: string): ReactNode[] {
+  const { body, signer } = extractSignature(rawBody);
+  const sigLocale = locale ?? (/[\u0600-\u06FF]/.test(body) ? "ar" : "fr");
   const blocks = body.replace(/\r\n/g, "\n").split(/\n\s*\n/);
-  return blocks
+  const nodes: ReactNode[] = blocks
     .map((raw) => raw.trim())
     .filter(Boolean)
     .map((block, i) => {
@@ -123,11 +145,13 @@ export function renderArticleBody(body: string): ReactNode[] {
         </p>
       );
     });
+  if (signer) nodes.push(<ArticleSignature key="signature" signer={signer} locale={sigLocale} />);
+  return nodes;
 }
 
 /** Plain-text version of a formatted body — for meta descriptions/excerpts. */
 export function stripArticleFormatting(body: string): string {
-  return body
+  return extractSignature(body).body
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1")
