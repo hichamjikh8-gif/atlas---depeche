@@ -4,7 +4,7 @@ import { isLocale } from "@/i18n/locales";
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://www.xn--atlasdpche-g7an.com";
-const DIRECTOR_PHOTO = "/equipe/redouane-jikh-directeur-publication-atlas-depeche.jpg";
+const DIRECTOR_PHOTO = "/equipe/redouane-jikh-directeur-de-la-publication.jpg";
 
 const CONTENT = {
   fr: {
@@ -83,12 +83,13 @@ export default async function MentionsPage({
         <img
           src={DIRECTOR_PHOTO}
           alt={c.photoAlt}
-          width={800}
-          height={1067}
+          width={597}
+          height={805}
           style={{ display: "block", inlineSize: "100%", maxInlineSize: "420px", blockSize: "auto", borderRadius: "8px" }}
         />
-        <figcaption style={{ ...p, marginBlockStart: "var(--space-2)" }}>
-          <strong>{c.directorLabel} :</strong> {c.directorName}
+        <figcaption style={{ marginBlockStart: "var(--space-3, .75rem)", maxInlineSize: "420px", textAlign: "center" }}>
+          <span className="ad-dir-lbl">{c.directorLabel}</span>
+          <span className={locale === "ar" ? "ad-dir-name ar" : "ad-dir-name"}>{c.directorName}</span>
         </figcaption>
       </figure>
 
@@ -111,6 +112,9 @@ export default async function MentionsPage({
         .ad-founder .ad-founder-lbl { display: block; font-family: var(--font-serif); font-size: .8rem; letter-spacing: .25em; text-transform: uppercase; color: #b9b3a0; }
         .ad-founder .ad-founder-name { display: block; font-family: 'Great Vibes', cursive; font-size: 2.6rem; color: #d4af37; line-height: 1.3; }
         .ad-founder .ad-founder-name.ar { font-family: 'Aref Ruqaa', serif; font-size: 2.2rem; }
+        .ad-dir-lbl { display: block; font-family: var(--font-serif); font-size: .8rem; letter-spacing: .25em; text-transform: uppercase; color: #b9b3a0; }
+        .ad-dir-name { display: block; font-family: 'Great Vibes', cursive; font-size: 2.6rem; color: #d4af37; line-height: 1.3; }
+        .ad-dir-name.ar { font-family: 'Aref Ruqaa', serif; font-size: 2.2rem; }
         @keyframes adFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
       `}</style>
       <details className="ad-founder">
